@@ -27,6 +27,11 @@ class Birthday(Field):
             value = input("Enter the birthday: ")
         super().__init__(value)
 
+    def display_with_weekday(self):
+        date_obj = datetime.strptime(self.value, "%d.%m.%Y")
+        day_of_week = date_obj.strftime("%A")
+        return f"{self.value} ({day_of_week})"
+
 class Record:
     def __init__(self, name):
         self.name = Name(name)
@@ -56,7 +61,7 @@ class Record:
 
     def __str__(self):
         phones_str = '; '.join(str(p) for p in self.phones)
-        return f"Contact name: {self.name}, phones: {phones_str}, birthday: {self.birthday}"
+        return f"Contact name: {self.name}, phones: {phones_str}, birthday: {self.birthday.display_with_weekday()}" if self.birthday else f"Contact name: {self.name}, phones: {phones_str}"
 
 class AddressBook(UserDict):
     def add_record(self, record):
@@ -151,7 +156,7 @@ def main():
             name = input("Enter the contact name: ")
             record = address_book.find(name)
             if record and record.birthday:
-                print(f"Birthday for {name}: {record.birthday}")
+                print(f"Birthday for {name}: {record.birthday.display_with_weekday()}")
             elif record:
                 print(f"No birthday found for {name}.")
             else:
@@ -161,7 +166,7 @@ def main():
             if upcoming_birthdays:
                 print("Upcoming birthdays:")
                 for record in upcoming_birthdays:
-                    print(f"{record.name}: {record.birthday}")
+                    print(f"{record.name}: {record.birthday.display_with_weekday()}")
             else:
                 print("No upcoming birthdays.")
         elif command == 'close' or command == 'exit':
