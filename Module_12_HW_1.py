@@ -87,10 +87,13 @@ class AddressBook(UserDict):
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
     def add_record(self, record):
-        self.data[record.name.value] = record
+        name_lowercase = record.name.value.lower()
+        self.data[name_lowercase] = record
 
     def find(self, name):
-        return self.data.get(name)
+        name_lowercase = name.lower() 
+        record = self.data.get(name_lowercase)
+        return record
 
     def delete(self, name):
         if name in self.data:
