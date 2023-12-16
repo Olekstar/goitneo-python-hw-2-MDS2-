@@ -1,5 +1,6 @@
 from collections import UserDict
 from datetime import datetime, timedelta
+import json
 
 class Field:
     def __init__(self, value):
@@ -64,17 +65,27 @@ class Record:
         return f"Contact name: {self.name}, phones: {phones_str}, birthday: {self.birthday.display_with_weekday()}" if self.birthday else f"Contact name: {self.name}, phones: {phones_str}"
 
 class AddressBook(UserDict):
-    def save_to_file(self, filename='address_book.pkl'):
-        with open(filename, 'wb') as file:
-            pickle.dump(self.data, file)
+    def save_to_file(self, filename='address_book.json'):  
+        with open(filename, 'w') as file:
+            json.dump(self.data, file, default=lambda o: o.__dict__)  
 
-    def load_from_file(self, filename='address_book.pkl'):
+    def load_from_file(self, filename='address_book.json'):
         try:
-            with open(filename, 'rb') as file:
-                self.data = pickle.load(file)
+            with open(filename, 'r') as file:
+                loaded_data = json.load(file)  
+                for name, data in loaded_data.items():
+                    record = Record(data['name']['value'])
+                    record.phones = [Phone(phone['value']) for phone in data.get('phones', [])]
+                    if 'birthday' in data and data['birthday'] is not None:
+                        record.add_birthday(data['birthday']['value'])
+                    self.add_record(record)
         except FileNotFoundError:
-            # Handle the case when the file doesn't exist (e.g., first run)
-            pass
+            print(f"File not found: {filename}")
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            # Handle the case when the file contains invalid JSON
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
     def add_record(self, record):
         self.data[record.name.value] = record
 
@@ -120,6 +131,8 @@ def main():
                      'add-birthday - add birthday\n'
                      'show-birthday - show birthday\n'
                      'birthdays - upcoming birthdays\n'
+                     'save - save address book to file\n'
+                     'load - load address book from file\n'
                      'close or exit - close the program\n' + '=' * 30)
 
     while True:
@@ -188,6 +201,11 @@ def main():
                         print(f"{name}: {day_of_week}")
             else:
                 print("No upcoming birthdays.")
+        elif command == 'save':
+            address_book.save_to_file()
+            print("Address book saved to file.")
+        elif command == 'load':
+            address_book.load_from_file()
         elif command == 'close' or command == 'exit':
             print("Goodbye!")
             break
