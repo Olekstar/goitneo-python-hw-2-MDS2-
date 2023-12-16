@@ -123,10 +123,8 @@ class AddressBook(UserDict):
 def load_contacts(address_book):
     address_book.load_from_file()
 
-def main():
-    address_book = AddressBook()
-    load_contacts(address_book)
-    print('=' * 30 + '\nMain commands:\n'
+def display_help():
+    print('=' * 30 + '\nAvailable commands:\n'
                      'add - add new contact\\contact number\n'
                      'change - change contact number\n'
                      'phone - show phone number\n'
@@ -136,12 +134,21 @@ def main():
                      'birthdays - upcoming birthdays\n'
                      'save - save address book to file\n'
                      'load - load address book from file\n'
+                     'hello - receive a greeting from the bot\n'
                      'close or exit - close the program\n' + '=' * 30)
 
-    while True:
-        command = input("Enter a command: ").lower()
+def main():
+    address_book = AddressBook()
+    load_contacts(address_book)
+    display_help()
 
-        if command == 'add':
+    while True:
+        command = input("Enter a command or type 'help' to see the list of commands: ").lower()
+
+        if command == 'hello':
+            print("Hello! I'm address book bot. Type any command you see in menu.") 
+        
+        elif command == 'add':
             name = input("Enter the contact name: ")
             phone = input("Enter the contact number: ")
             record = address_book.find(name)
@@ -209,6 +216,8 @@ def main():
             print("Address book saved to file.")
         elif command == 'load':
             address_book.load_from_file()
+        elif command == 'help':
+            display_help()
         elif command == 'close' or command == 'exit':
             print("Goodbye!")
             break
