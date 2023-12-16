@@ -64,6 +64,17 @@ class Record:
         return f"Contact name: {self.name}, phones: {phones_str}, birthday: {self.birthday.display_with_weekday()}" if self.birthday else f"Contact name: {self.name}, phones: {phones_str}"
 
 class AddressBook(UserDict):
+    def save_to_file(self, filename='address_book.pkl'):
+        with open(filename, 'wb') as file:
+            pickle.dump(self.data, file)
+
+    def load_from_file(self, filename='address_book.pkl'):
+        try:
+            with open(filename, 'rb') as file:
+                self.data = pickle.load(file)
+        except FileNotFoundError:
+            # Handle the case when the file doesn't exist (e.g., first run)
+            pass
     def add_record(self, record):
         self.data[record.name.value] = record
 
@@ -77,19 +88,26 @@ class AddressBook(UserDict):
     def get_birthdays_per_week(self):
         today = datetime.now()
         next_week = today + timedelta(days=7)
-        upcoming_birthdays = []
+        upcoming_birthdays = {i: [] for i in range(7)}
 
         for record in self.data.values():
             if record.birthday:
                 birthdate = datetime.strptime(record.birthday.value, "%d.%m.%Y").replace(year=today.year)
-                if today <= birthdate <= next_week:
-                    upcoming_birthdays.append(record)
+
+                # Check if the birthday is within the next week
+                delta_days = (birthdate - today).days
+                if 0 <= delta_days < 7:
+                    # If it's a weekend, move to Monday
+                    if birthdate.weekday() >= 5:
+                        birthdate += timedelta(days=(7 - birthdate.weekday()))
+
+                    # Store the name and formatted day of the week in the corresponding day of the week
+                    upcoming_birthdays[birthdate.weekday()].append((record.name.value, birthdate.strftime("%A")))
 
         return upcoming_birthdays
 
 def load_contacts(address_book):
-    # Function to load contacts, if needed
-    pass
+    address_book.load_from_file()
 
 def main():
     address_book = AddressBook()
@@ -165,8 +183,9 @@ def main():
             upcoming_birthdays = address_book.get_birthdays_per_week()
             if upcoming_birthdays:
                 print("Upcoming birthdays:")
-                for record in upcoming_birthdays:
-                    print(f"{record.name}: {record.birthday.display_with_weekday()}")
+                for day, names in upcoming_birthdays.items():
+                    for name, day_of_week in names:
+                        print(f"{name}: {day_of_week}")
             else:
                 print("No upcoming birthdays.")
         elif command == 'close' or command == 'exit':
